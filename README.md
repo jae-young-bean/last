@@ -23,14 +23,26 @@ npm install
 
 1. [Supabase](https://supabase.com)에서 새 프로젝트를 생성합니다.
 2. 프로젝트 설정에서 URL과 API 키를 복사합니다.
-3. `src/App.jsx` 파일에서 다음 부분을 수정합니다:
+3. 프로젝트 루트에 `.env.local` 파일을 생성하고 다음 내용을 추가합니다:
 
-```javascript
-const supabaseUrl = 'YOUR_SUPABASE_URL'
-const supabaseKey = 'YOUR_SUPABASE_ANON_KEY'
+```env
+VITE_SUPABASE_URL=https://your-project-id.supabase.co
+VITE_SUPABASE_ANON_KEY=your-anon-key-here
 ```
 
-### 3. 데이터베이스 테이블 생성
+**주의**: 
+- `.env.local` 파일은 `.gitignore`에 추가되어 있어야 합니다.
+- Supabase 프로젝트 설정 → API에서 URL과 anon public key를 찾을 수 있습니다.
+- 이메일 인증을 활성화하려면 Supabase 대시보드에서 Authentication → Settings → Email Auth를 활성화하세요.
+
+### 3. Supabase 인증 설정
+
+1. Supabase 대시보드에서 **Authentication** → **Settings**로 이동합니다.
+2. **Email Auth**를 활성화합니다.
+3. **Confirm email**을 활성화하여 이메일 확인을 요구할 수 있습니다 (선택사항).
+4. **Site URL**을 `http://localhost:3000`으로 설정합니다.
+
+### 4. 데이터베이스 테이블 생성
 
 Supabase SQL 편집기에서 다음 SQL을 실행하여 필요한 테이블을 생성합니다:
 
@@ -71,7 +83,7 @@ CREATE POLICY "Users can delete own journal entries" ON journal_entries
   FOR DELETE USING (auth.uid() = user_id);
 ```
 
-### 4. 개발 서버 실행
+### 5. 개발 서버 실행
 
 ```bash
 npm run dev

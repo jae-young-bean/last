@@ -34,6 +34,8 @@ function Register() {
     }
 
     try {
+      console.log('회원가입 시도:', { email, name, password: '***' })
+      
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
@@ -44,16 +46,60 @@ function Register() {
         }
       })
 
-      if (error) throw error
+      console.log('회원가입 결과:', { data, error })
+
+      if (error) {
+        console.error('회원가입 에러:', error)
+        throw error
+      }
 
       if (data.user) {
-        setSuccess('회원가입이 완료되었습니다! 이메일을 확인해주세요.')
-        setTimeout(() => {
-          navigate('/login')
-        }, 2000)
+        console.log('회원가입 성공:', data.user)
+        setSuccess('회원가입이 완료되었습니다! 자동으로 로그인됩니다.')
+        
+        // 회원가입 후 즉시 로그인 시도
+        try {
+          console.log('자동 로그인 시도...')
+          const { data: loginData, error: loginError } = await supabase.auth.signInWithPassword({
+            email,
+            password,
+          })
+          
+          console.log('자동 로그인 결과:', { loginData, loginError })
+          
+          if (loginError) {
+            console.error('자동 로그인 실패:', loginError)
+            
+            // 이메일 확인 에러인 경우, 다른 방법 시도
+            if (loginError.message.includes('Email not confirmed')) {
+              console.log('이메일 확인 없이 자동 로그인 시도...')
+              
+              // 세션 확인
+              const { data: { session } } = await supabase.auth.getSession()
+              if (session) {
+                console.log('세션이 존재합니다:', session)
+                navigate('/')
+                return
+              }
+              
+              setError('이메일 확인이 필요합니다. 로그인 페이지에서 다시 시도해주세요.')
+            } else {
+              setError('로그인에 실패했습니다. 로그인 페이지에서 다시 시도해주세요.')
+            }
+            setTimeout(() => navigate('/login'), 3000)
+          } else {
+            console.log('자동 로그인 성공:', loginData.user)
+            navigate('/')
+          }
+        } catch (error) {
+          console.error('자동 로그인 에러:', error)
+          setError('로그인에 실패했습니다. 로그인 페이지에서 다시 시도해주세요.')
+          setTimeout(() => navigate('/login'), 3000)
+        }
       }
     } catch (error) {
-      setError(error.message)
+      console.error('회원가입 실패:', error)
+      setError(error.message || '회원가입에 실패했습니다.')
     } finally {
       setLoading(false)
     }
